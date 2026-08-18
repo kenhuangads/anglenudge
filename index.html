@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b0b0f">
+<meta name="description" content="AngleNudge 拍照輔助神器：即時角度提示、水平儀、構圖線與光線偵測，幫你在各種生活情境輕鬆拍出好照片。">
+<title>AngleNudge｜拍照輔助神器</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- 開始畫面 -->
+  <section id="start-screen">
+    <div class="start-inner">
+      <img class="logo-mark" src="icons/icon.svg" alt="AngleNudge logo" width="96" height="96">
+      <h1>AngleNudge</h1>
+      <p class="tagline">拍照輔助神器</p>
+      <p class="slogan">喬好角度、抓對光線，一鍵拍出好照片</p>
+      <button id="btn-start" class="btn-primary">📷 開啟相機開始</button>
+      <button id="btn-demo" class="btn-ghost">先逛逛（示範模式）</button>
+      <p class="privacy-note">影像只在你的裝置上即時分析，<br>不會上傳任何照片。</p>
+    </div>
+  </section>
+
+  <!-- 拍攝主畫面 -->
+  <main id="camera-screen" hidden>
+    <div id="stage">
+      <video id="video" autoplay playsinline muted></video>
+      <svg id="guides" aria-hidden="true"></svg>
+
+      <div id="horizon" class="hidden">
+        <div id="horizon-line"><span class="notch"></span></div>
+        <div id="horizon-deg">0.0°</div>
+      </div>
+
+      <div id="bubble" class="hidden">
+        <div class="bubble-target"><div class="bubble-dot"></div></div>
+        <div id="bubble-label">俯拍水平儀：讓圓點對準中心</div>
+      </div>
+
+      <header id="topbar">
+        <button id="btn-grid" class="chip-btn" title="構圖輔助線">▦ 構圖線</button>
+        <div id="mode-title">🍜 食物</div>
+        <div class="topbar-right">
+          <button id="btn-timer" class="chip-btn" title="倒數計時">⏱ 關</button>
+          <button id="btn-flip" class="chip-btn" title="切換鏡頭">🔄</button>
+        </div>
+      </header>
+
+      <div id="demo-badge" class="hidden">示範模式</div>
+      <div id="checklist"></div>
+      <div id="hint"><span id="hint-text">準備中…</span></div>
+      <div id="countdown" class="hidden"></div>
+      <div id="flash"></div>
+    </div>
+
+    <footer id="controls">
+      <nav id="modes" aria-label="拍攝模式"></nav>
+      <div id="action-row">
+        <button id="btn-tips" class="round-btn" title="拍攝秘訣">💡</button>
+        <button id="btn-shutter" aria-label="拍照"><span></span></button>
+        <button id="btn-thumb" class="round-btn empty" aria-label="預覽最近照片"></button>
+      </div>
+    </footer>
+  </main>
+
+  <!-- 遮罩與底部面板 -->
+  <div id="backdrop" class="hidden"></div>
+
+  <div id="grid-menu" class="sheet">
+    <h2>構圖輔助線</h2>
+    <div id="grid-options"></div>
+    <p class="sheet-note">小提醒：選取「黃金螺旋」後再點一次可切換螺旋方向。</p>
+  </div>
+
+  <div id="tips-sheet" class="sheet">
+    <h2 id="tips-title">拍攝秘訣</h2>
+    <ul id="tips-list"></ul>
+    <button id="btn-tips-close" class="btn-ghost">關閉</button>
+  </div>
+
+  <div id="photo-view" class="hidden">
+    <img id="photo-img" alt="拍攝結果">
+    <div class="photo-actions">
+      <a id="btn-save" class="btn-primary" download>⬇️ 下載照片</a>
+      <button id="btn-photo-close" class="btn-ghost">關閉</button>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
