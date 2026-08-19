@@ -1,5 +1,5 @@
 // Service Worker：網路優先、快取備援（離線也能開啟，但線上永遠拿最新版）。
-const CACHE = 'anglenudge-v2';
+const CACHE = 'anglenudge-v3';
 const ASSETS = [
   '.',
   'index.html',

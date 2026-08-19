@@ -299,7 +299,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   gap: 18px; padding: 20px;
 }
 #photo-img { max-width: 94%; max-height: 70vh; border-radius: 12px; }
-.photo-actions { display: flex; gap: 12px; }
+.photo-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .photo-actions .btn-primary, .photo-actions .btn-ghost { min-width: 0; }
 
 /* ---------- Toast ---------- */

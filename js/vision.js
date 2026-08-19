@@ -17,6 +17,7 @@ const ctx = cv.getContext('2d', { willReadFrequently: true });
 const state = {
   ready: false,
   clutter: null,            // 0–1 邊緣密度
+  subject: null,            // 0–1 主體存在感（中央區域邊緣密度，越高代表有明顯主體）
   horizon: null,            // { tilt: 度, score: 0–100 } 或 null（畫面中無明顯水平線）
   face: null,               // { present, eyeRel: 眼睛相對高度 0(頂)–1(底) } 或 null
 };
@@ -63,10 +64,15 @@ function analyze() {
 
   // Sobel 邊緣 + 近水平線條方向直方圖（1° 一格）
   const bins = new Float32Array(HORIZON_SPAN * 2 + 1);
-  let edges = 0, energy = 0;
+  let edges = 0, energy = 0, centerEdges = 0;
   const total = (W - 2) * (H - 2);
+  // 主體區：中央偏上（人像的臉、食物商品的主角通常落在這一帶）
+  const cx0 = Math.round(W * 0.22), cx1 = Math.round(W * 0.78);
+  const cy0 = Math.round(H * 0.12), cy1 = Math.round(H * 0.72);
+  const centerPix = (cx1 - cx0 + 1) * (cy1 - cy0 + 1);
   for (let y = 1; y < H - 1; y++) {
     const r0 = (y - 1) * W, r1 = y * W, r2 = (y + 1) * W;
+    const inY = y >= cy0 && y <= cy1;
     for (let x = 1; x < W - 1; x++) {
       const gx = (gray[r0 + x + 1] + 2 * gray[r1 + x + 1] + gray[r2 + x + 1])
                - (gray[r0 + x - 1] + 2 * gray[r1 + x - 1] + gray[r2 + x - 1]);
@@ -75,6 +81,7 @@ function analyze() {
       const mag = Math.abs(gx) + Math.abs(gy);
       if (mag <= EDGE_T) continue;
       edges++;
+      if (inY && x >= cx0 && x <= cx1) centerEdges++;
       // 線條方向 = 梯度方向 + 90°，正規化到 (-90, 90]
       let la = Math.atan2(gy, gx) * 57.29578 + 90;
       if (la > 90) la -= 180;
@@ -86,6 +93,9 @@ function analyze() {
     }
   }
   state.clutter = edges / total;
+  // 主體存在感：中央區邊緣密度 0.012（空景）→ 0.05（明顯主體）線性映射
+  const cd = centerEdges / centerPix;
+  state.subject = Math.max(0, Math.min(1, (cd - 0.012) / 0.038));
 
   // 找最強方向（3 格平滑），需同時具備足夠能量與方向集中度才視為有效地平線
   if (cfg.horizon) {

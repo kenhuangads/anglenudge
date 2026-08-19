@@ -16,7 +16,7 @@ export const GRIDS = [
 export const MODES = [
   {
     id: 'food', name: '食物', emoji: '🍜', grid: 'thirds', facing: 'environment',
-    vision: { clutter: true },
+    vision: { clutter: true, subject: true },
     angle: { kind: 'dual', rollTol: 2.5, targets: [
       { pitch: 45, tol: 10, label: '45° 斜角' },
       { pitch: 90, tol: 6,  label: '90° 俯拍' },
@@ -32,7 +32,7 @@ export const MODES = [
   },
   {
     id: 'portrait', name: '人像', emoji: '🧍', grid: 'thirds', facing: 'environment',
-    vision: { eyeline: true, clutter: true },
+    vision: { eyeline: true, clutter: true, subject: true },
     angle: { kind: 'level', rollTol: 2 },
     tips: [
       '鏡頭與對方眼睛同高最自然；拍全身時鏡頭放低到腰部以下顯腿長',
@@ -45,7 +45,7 @@ export const MODES = [
   },
   {
     id: 'selfie', name: '自拍', emoji: '🤳', grid: 'thirds', facing: 'user',
-    vision: { eyeline: true },
+    vision: { eyeline: true, subject: true },
     angle: { kind: 'level', rollTol: 2.5 },
     tips: [
       '鏡頭稍微高於眼睛 10～15°，臉型最好看',
@@ -69,6 +69,7 @@ export const MODES = [
   },
   {
     id: 'pet', name: '寵物', emoji: '🐱', grid: 'thirds', facing: 'environment',
+    vision: { subject: true },
     angle: { kind: 'level', rollTol: 3 },
     tips: [
       '蹲下來！鏡頭與寵物眼睛同高，世界感立刻不同',
@@ -80,7 +81,7 @@ export const MODES = [
   },
   {
     id: 'product', name: '商品', emoji: '📦', grid: 'center', facing: 'environment',
-    vision: { clutter: true },
+    vision: { clutter: true, subject: true },
     angle: { kind: 'dual', rollTol: 2, targets: [
       { pitch: 45, tol: 10, label: '45° 斜角' },
       { pitch: 90, tol: 5,  label: '90° 俯拍' },

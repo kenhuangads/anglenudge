@@ -36,6 +36,7 @@ const el = {
   photoView: $('#photo-view'),
   photoImg: $('#photo-img'),
   btnSave: $('#btn-save'),
+  btnShare: $('#btn-share'),
   toast: $('#toast'),
   btnThumb: $('#btn-thumb'),
   btnTimer: $('#btn-timer'),
@@ -59,6 +60,7 @@ const state = {
   bubbleOn: false,
   expo: { status: 'na' },
   lastPhoto: null,
+  lastBlob: null,
   busy: false,
   running: false,
   sound: true,            // 對齊提示音（Guided Frame 式）
@@ -328,6 +330,8 @@ function updateScore(s) {
   }
   if (state.expo.status === 'dark' || state.expo.status === 'bright') sc -= 18;
   if (vm.clutter && v.clutter != null) sc -= Math.min(14, Math.max(0, v.clutter - 0.30) * 90);
+  if (vm.subject && v.subject != null) sc -= Math.round((1 - v.subject) * 25);
+  if (vm.eyeline && v.face && v.face.present === false) sc = Math.min(sc, 70);
   if (vm.horizon && v.horizon && !state.bubbleOn) sc -= (100 - v.horizon.score) * 0.12;
 
   sc = Math.max(0, Math.round(sc));
@@ -390,6 +394,9 @@ function computeHint() {
 
   const v = getVision();
   const vm = m.vision || {};
+  if (vm.subject && v.subject != null && v.subject < 0.35) {
+    return { ok: false, text: '🎯 畫面沒有明顯主體：讓主角靠近一點、佔比大一點' };
+  }
   if (vm.eyeline && v.face && v.face.present && v.face.eyeRel != null) {
     const dy = v.face.eyeRel - 1 / 3;
     if (dy > 0.10) return { ok: false, text: '👀 鏡頭放低（或往下傾）一點，讓眼睛升到上 1/3 線' };
@@ -435,6 +442,8 @@ function snap() {
   const url = capturePhoto(el.video, mirrored);
   if (!url) { toast('畫面尚未就緒，再試一次'); return; }
   state.lastPhoto = url;
+  state.lastBlob = null;
+  fetch(url).then(r => r.blob()).then(b => { state.lastBlob = b; }).catch(() => { });
   el.flash.classList.remove('go');
   void el.flash.offsetWidth; // 重新觸發動畫
   el.flash.classList.add('go');
@@ -451,7 +460,23 @@ function openPhoto() {
   const ts = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
   el.btnSave.href = state.lastPhoto;
   el.btnSave.download = `AngleNudge_${ts}.jpg`;
+  // 支援檔案分享的裝置（iOS/Android）：主按鈕改為「存到相簿」，下載退居備用
+  const canShare = typeof navigator.share === 'function';
+  el.btnShare.classList.toggle('hidden', !canShare);
+  el.btnSave.className = canShare ? 'btn-ghost' : 'btn-primary';
   el.photoView.classList.remove('hidden');
+}
+
+// 透過系統分享面板存入相簿（iOS 選「儲存影像」、Android 選「相片」）。
+// Blob 已在拍照時預先轉好，這裡同步取用，確保 share() 落在手勢有效期內。
+function sharePhoto() {
+  const b = state.lastBlob;
+  if (!b || !(navigator.canShare)) { el.btnSave.click(); return; }
+  const file = new File([b], el.btnSave.download || 'AngleNudge.jpg', { type: 'image/jpeg' });
+  if (!navigator.canShare({ files: [file] })) { el.btnSave.click(); return; }
+  navigator.share({ files: [file] })
+    .then(() => toast('✅ 完成！選了「儲存影像」就已存入相簿'))
+    .catch(err => { if (err && err.name !== 'AbortError') toast('分享失敗，可改用下載'); });
 }
 
 /* ---------- 底部面板 / 雜項 ---------- */
@@ -532,6 +557,7 @@ function init() {
   $('#btn-flip').addEventListener('click', flipCamera);
   $('#btn-thumb').addEventListener('click', openPhoto);
   $('#btn-photo-close').addEventListener('click', () => el.photoView.classList.add('hidden'));
+  el.btnShare.addEventListener('click', sharePhoto);
   el.backdrop.addEventListener('click', closeSheets);
 
   document.addEventListener('keydown', e => {
