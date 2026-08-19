@@ -19,11 +19,14 @@ const state = {
   roll: 0,            // 度，0 = 水平
   pitch: 0,           // 度，0 = 朝前，90 = 俯拍
   gx: 0, gy: 0,       // 正規化重力（螢幕平面分量），供氣泡水平儀使用
+  jitter: 0,          // 原始角度的幀間變化量（度，EMA 平滑），衡量手震程度
+  stable: true,       // 手持是否穩定（自動快門的門檻之一）
 };
 
 let listening = false;
 let demoRaf = 0;
 let gotEvent = false;
+let prevRoll = null, prevPitch = 0;
 
 export function getSensors() {
   return state;
@@ -61,6 +64,14 @@ function onOrient(e) {
   const roll = ROLL_DIR * Math.atan2(sgx, -sgy) * R2D;
   const pitch = Math.atan2(-gz, Math.hypot(sgx, sgy)) * R2D;
 
+  // 穩定度：用「平滑前」的原始角度差衡量手震
+  if (prevRoll != null) {
+    const j = Math.abs(roll - prevRoll) + Math.abs(pitch - prevPitch);
+    state.jitter = lerp(state.jitter, j, 0.12);
+    state.stable = state.jitter < 0.45;
+  }
+  prevRoll = roll; prevPitch = pitch;
+
   state.roll = lerpAngle(state.roll, roll, 0.25);
   state.pitch = lerp(state.pitch, pitch, 0.25);
   state.gx = lerp(state.gx, sgx, 0.3);
@@ -76,6 +87,8 @@ function runDemo() {
     state.pitch = 52 + 46 * Math.sin(t * 0.16);
     state.gx = 0.10 * Math.sin(t * 0.45);
     state.gy = 0.10 * Math.cos(t * 0.33);
+    state.jitter = 0.15;
+    state.stable = true;
     demoRaf = requestAnimationFrame(tick);
   };
   tick();

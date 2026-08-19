@@ -16,6 +16,7 @@ export const GRIDS = [
 export const MODES = [
   {
     id: 'food', name: '食物', emoji: '🍜', grid: 'thirds', facing: 'environment',
+    vision: { clutter: true },
     angle: { kind: 'dual', rollTol: 2.5, targets: [
       { pitch: 45, tol: 10, label: '45° 斜角' },
       { pitch: 90, tol: 6,  label: '90° 俯拍' },
@@ -31,6 +32,7 @@ export const MODES = [
   },
   {
     id: 'portrait', name: '人像', emoji: '🧍', grid: 'thirds', facing: 'environment',
+    vision: { eyeline: true, clutter: true },
     angle: { kind: 'level', rollTol: 2 },
     tips: [
       '鏡頭與對方眼睛同高最自然；拍全身時鏡頭放低到腰部以下顯腿長',
@@ -43,6 +45,7 @@ export const MODES = [
   },
   {
     id: 'selfie', name: '自拍', emoji: '🤳', grid: 'thirds', facing: 'user',
+    vision: { eyeline: true },
     angle: { kind: 'level', rollTol: 2.5 },
     tips: [
       '鏡頭稍微高於眼睛 10～15°，臉型最好看',
@@ -54,6 +57,7 @@ export const MODES = [
   },
   {
     id: 'landscape', name: '風景', emoji: '🌄', grid: 'thirds', facing: 'environment',
+    vision: { horizon: true },
     angle: { kind: 'level', rollTol: 1.5 },
     tips: [
       '地平線一定要水平——盯著水平儀變綠再按快門',
@@ -76,6 +80,7 @@ export const MODES = [
   },
   {
     id: 'product', name: '商品', emoji: '📦', grid: 'center', facing: 'environment',
+    vision: { clutter: true },
     angle: { kind: 'dual', rollTol: 2, targets: [
       { pitch: 45, tol: 10, label: '45° 斜角' },
       { pitch: 90, tol: 5,  label: '90° 俯拍' },
@@ -90,6 +95,7 @@ export const MODES = [
   },
   {
     id: 'street', name: '街拍建築', emoji: '🏙️', grid: 'diag', facing: 'environment',
+    vision: { horizon: true },
     angle: { kind: 'upright', rollTol: 2, pitchTol: 6 },
     tips: [
       '手機打直（垂直地面），大樓才不會往後倒',

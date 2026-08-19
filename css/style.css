@@ -236,8 +236,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   display: grid; grid-template-columns: 1fr auto 1fr;
   align-items: center; padding: 4px 30px;
 }
-#btn-tips { justify-self: start; }
-#btn-thumb { justify-self: end; }
+.action-side { display: flex; gap: 12px; align-items: center; }
+.action-side:first-child { justify-self: start; }
+.action-side:last-child { justify-self: end; }
 
 .round-btn {
   width: 48px; height: 48px; border-radius: 50%;
@@ -308,4 +309,25 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   padding: 10px 18px; border-radius: 999px;
   background: rgba(20, 20, 26, 0.92); border: 1px solid #33333d;
   font-size: 14px; text-align: center;
+}
+
+/* ---------- 構圖評分、自動快門、提示音 ---------- */
+#score {
+  position: absolute; top: calc(126px + env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%); z-index: 4; pointer-events: none;
+  font-size: 12px; font-variant-numeric: tabular-nums;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12); color: #cfcfd6;
+}
+#score.s-ok { color: #7ee2ae; border-color: rgba(53, 199, 123, 0.5); }
+#score.s-warn { color: #ffd27a; border-color: rgba(255, 176, 32, 0.5); }
+#score.s-bad { color: #ff9a9e; border-color: rgba(255, 90, 95, 0.5); }
+
+.round-btn.on { border-color: var(--gold); background: #241d08; }
+
+#btn-shutter.armed { border-color: var(--gold); animation: arm-pulse 1.6s ease-out infinite; }
+@keyframes arm-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 179, 1, 0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(245, 179, 1, 0); }
 }

@@ -1,5 +1,5 @@
 // Service Worker：網路優先、快取備援（離線也能開啟，但線上永遠拿最新版）。
-const CACHE = 'anglenudge-v1';
+const CACHE = 'anglenudge-v2';
 const ASSETS = [
   '.',
   'index.html',
@@ -10,6 +10,8 @@ const ASSETS = [
   'js/sensors.js',
   'js/exposure.js',
   'js/guides.js',
+  'js/vision.js',
+  'js/feedback.js',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',

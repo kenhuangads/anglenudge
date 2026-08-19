@@ -5,6 +5,8 @@ import { startCamera, stopCamera, startDemoScene, capturePhoto } from './camera.
 import { startSensors, getSensors } from './sensors.js';
 import { analyzeExposure } from './exposure.js';
 import { renderGuides } from './guides.js';
+import { feedback } from './feedback.js';
+import { startVision, getVision } from './vision.js';
 
 const $ = s => document.querySelector(s);
 const el = {
@@ -37,6 +39,10 @@ const el = {
   toast: $('#toast'),
   btnThumb: $('#btn-thumb'),
   btnTimer: $('#btn-timer'),
+  btnSound: $('#btn-sound'),
+  btnAuto: $('#btn-auto'),
+  btnShutter: $('#btn-shutter'),
+  score: $('#score'),
 };
 
 const TOPDOWN_ENTER = 68;  // pitch 超過此值進入俯拍氣泡模式
@@ -55,6 +61,8 @@ const state = {
   lastPhoto: null,
   busy: false,
   running: false,
+  sound: true,            // 對齊提示音（Guided Frame 式）
+  auto: false,            // 自動快門
 };
 
 /* ---------- 儲存偏好 ---------- */
@@ -66,6 +74,9 @@ function loadPrefs() {
     if (m) state.mode = getMode(m);
     const t = Number(localStorage.getItem('an_timer') || 0);
     if ([0, 3, 10].includes(t)) state.timer = t;
+    const snd = localStorage.getItem('an_sound');
+    if (snd != null) state.sound = snd === '1';
+    state.auto = localStorage.getItem('an_auto') === '1';
   } catch { /* 私密模式等情況直接用預設值 */ }
 }
 function savePrefs() {
@@ -73,6 +84,8 @@ function savePrefs() {
     localStorage.setItem('an_grids', JSON.stringify(state.gridOverrides));
     localStorage.setItem('an_mode', state.mode.id);
     localStorage.setItem('an_timer', String(state.timer));
+    localStorage.setItem('an_sound', state.sound ? '1' : '0');
+    localStorage.setItem('an_auto', state.auto ? '1' : '0');
   } catch { }
 }
 
@@ -112,6 +125,7 @@ function showCameraScreen() {
   applyMode(state.mode, { restartCamera: false });
   if (!state.running) {
     state.running = true;
+    startVision(el.video, () => state.mode.vision || {});
     requestAnimationFrame(tick);
     setInterval(() => { state.expo = analyzeExposure(el.video); }, 700);
     setInterval(updateHint, 1200);
@@ -213,13 +227,43 @@ function tick() {
     el.bubble.classList.toggle('ok', Math.hypot(s.gx, s.gy) < BUBBLE_OK);
   }
 
-  updateChecklist(s);
+  const chips = chipDefs();
+  updateChecklist(chips);
+
+  // 新子系統（回饋/自動快門/評分）故障時不得拖垮核心儀表迴圈
+  try {
+    const quiet = el.photoView.classList.contains('hidden') &&
+      el.backdrop.classList.contains('hidden') && !document.hidden;
+    feedback.update(alignDeviations(s), quiet && state.sound && !state.busy);
+    maybeAutoShutter(chips, s);
+    updateScore(s);
+  } catch { }
   requestAnimationFrame(tick);
 }
 
 function nearestTarget(a, pitch) {
   return a.targets.reduce((best, t) =>
     Math.abs(pitch - t.pitch) < Math.abs(pitch - best.pitch) ? t : best);
+}
+
+// 目前模式所有角度約束中「超出容差的最大度數」；0 = 全數對齊
+function alignDeviations(s) {
+  if (!s.available) return { active: false, aligned: false, worst: 0 };
+  const a = state.mode.angle;
+  let worst = 0;
+  if (state.bubbleOn) {
+    worst = Math.max(0, (Math.hypot(s.gx, s.gy) - BUBBLE_OK) * 57.3);
+  } else {
+    worst = Math.max(0, Math.abs(s.roll) - (a.rollTol || 2));
+    if (a.kind === 'dual') {
+      const t = nearestTarget(a, s.pitch);
+      worst = Math.max(worst, Math.abs(s.pitch - t.pitch) - t.tol);
+    }
+    if (a.kind === 'upright') {
+      worst = Math.max(worst, Math.abs(s.pitch) - a.pitchTol);
+    }
+  }
+  return { active: true, aligned: worst <= 0, worst };
 }
 
 function chipDefs() {
@@ -240,18 +284,75 @@ function chipDefs() {
       chips.push({ label: '打直', ok: Math.abs(s.pitch) <= a.pitchTol });
     }
   }
+  if (state.auto && s.available) {
+    chips.push({ label: '穩定', ok: !!s.stable });
+  }
   chips.push({ label: '光線', ok: state.expo.status === 'ok' });
   return chips;
 }
 
 let lastChipsKey = '';
-function updateChecklist(s) {
-  const chips = chipDefs(s);
+function updateChecklist(chips = chipDefs()) {
   const key = chips.map(c => c.label + (c.ok ? 1 : 0)).join('|');
   if (key === lastChipsKey) return;
   lastChipsKey = key;
   el.checklist.innerHTML = chips.map(c =>
     `<span class="chip${c.ok ? ' ok' : ''}">${c.ok ? '✓' : '○'} ${c.label}</span>`).join('');
+}
+
+/* ---------- 構圖評分（IAA 輕量版）與自動快門 ---------- */
+let scoreAt = 0, scoreShown = -1;
+function updateScore(s) {
+  const now = performance.now();
+  if (now - scoreAt < 300) return;
+  scoreAt = now;
+
+  const a = state.mode.angle;
+  const vm = state.mode.vision || {};
+  const v = getVision();
+  let sc = 100;
+  if (s.available) {
+    if (state.bubbleOn) {
+      sc -= Math.min(30, Math.max(0, (Math.hypot(s.gx, s.gy) - BUBBLE_OK) * 57.3) * 6);
+    } else {
+      sc -= Math.min(30, Math.max(0, Math.abs(s.roll) - (a.rollTol || 2)) * 6);
+      if (a.kind === 'dual') {
+        const t = nearestTarget(a, s.pitch);
+        sc -= Math.min(25, Math.max(0, Math.abs(s.pitch - t.pitch) - t.tol) * 2.5);
+      }
+      if (a.kind === 'upright') {
+        sc -= Math.min(25, Math.max(0, Math.abs(s.pitch) - a.pitchTol) * 2.5);
+      }
+    }
+    if (!s.stable) sc -= 8;
+  }
+  if (state.expo.status === 'dark' || state.expo.status === 'bright') sc -= 18;
+  if (vm.clutter && v.clutter != null) sc -= Math.min(14, Math.max(0, v.clutter - 0.30) * 90);
+  if (vm.horizon && v.horizon && !state.bubbleOn) sc -= (100 - v.horizon.score) * 0.12;
+
+  sc = Math.max(0, Math.round(sc));
+  if (sc === scoreShown) return;
+  scoreShown = sc;
+  el.score.textContent = `構圖 ${sc}`;
+  el.score.className = sc >= 85 ? 's-ok' : sc >= 65 ? 's-warn' : 's-bad';
+}
+
+const AUTO_HOLD = 900;        // 全數就緒需維持的毫秒數
+let armStart = 0, autoCooldownUntil = 0, autoNeedsReset = false;
+function maybeAutoShutter(chips, s) {
+  if (!state.auto || state.busy) { armStart = 0; return; }
+  const ready = s.available && chips.length > 1 && chips.every(c => c.ok);
+  if (!ready) { armStart = 0; autoNeedsReset = false; return; }
+  if (autoNeedsReset) return;               // 拍完需先離開就緒狀態才會再拍
+  const now = performance.now();
+  if (now < autoCooldownUntil) { armStart = 0; return; }
+  if (!armStart) armStart = now;
+  if (now - armStart >= AUTO_HOLD) {
+    armStart = 0;
+    autoCooldownUntil = now + 3000;
+    autoNeedsReset = true;
+    snap();
+  }
 }
 
 /* ---------- 提示引擎（每 1.2 秒） ---------- */
@@ -286,6 +387,21 @@ function computeHint() {
   }
   if (exp === 'dark') return { ok: false, text: '💡 光線偏暗：靠近窗邊、開燈或換個亮一點的位置' };
   if (exp === 'bright') return { ok: false, text: '☀️ 小心過曝：避開直射強光，或稍微換個角度' };
+
+  const v = getVision();
+  const vm = m.vision || {};
+  if (vm.eyeline && v.face && v.face.present && v.face.eyeRel != null) {
+    const dy = v.face.eyeRel - 1 / 3;
+    if (dy > 0.10) return { ok: false, text: '👀 鏡頭放低（或往下傾）一點，讓眼睛升到上 1/3 線' };
+    if (dy < -0.10) return { ok: false, text: '👀 鏡頭抬高一點，讓眼睛落在上 1/3 線附近' };
+  }
+  if (vm.horizon && v.horizon && !state.bubbleOn && Math.abs(v.horizon.tilt) > 4 &&
+      Math.abs(s.roll) <= (a.rollTol || 2)) {
+    return { ok: false, text: `🌅 畫面裡的地平線仍斜約 ${Math.abs(v.horizon.tilt).toFixed(0)}°，試著對齊實際景物` };
+  }
+  if (vm.clutter && v.clutter != null && v.clutter > 0.34) {
+    return { ok: false, text: '🧹 背景有點雜亂：湊近主角或清掉雜物，畫面更聚焦（減法原則）' };
+  }
 
   const pool = ['✅ 構圖就緒——按下快門！', ...m.tips.slice(0, 2).map(t => '💡 ' + t)];
   return { ok: true, text: pool[Math.floor(Date.now() / 5000) % pool.length] };
@@ -323,6 +439,7 @@ function snap() {
   void el.flash.offsetWidth; // 重新觸發動畫
   el.flash.classList.add('go');
   navigator.vibrate?.(20);
+  if (state.sound) feedback.shutterCue();
   el.btnThumb.classList.remove('empty');
   el.btnThumb.style.backgroundImage = `url(${url})`;
   toast('已拍下 📸 點右下縮圖可預覽與下載');
@@ -367,6 +484,22 @@ function cycleTimer() {
   savePrefs();
 }
 
+function toggleSound() {
+  state.sound = !state.sound;
+  el.btnSound.textContent = state.sound ? '🔊' : '🔇';
+  if (state.sound) feedback.unlock();
+  toast(state.sound ? '🔊 對齊提示音開啟：越接近目標，節奏越快、音高越高' : '對齊提示音關閉', 2400);
+  savePrefs();
+}
+
+function toggleAuto() {
+  state.auto = !state.auto;
+  el.btnAuto.classList.toggle('on', state.auto);
+  el.btnShutter.classList.toggle('armed', state.auto);
+  toast(state.auto ? '🤖 自動快門：水平、角度、光線、穩定全數就緒後自動拍攝' : '自動快門關閉', 2600);
+  savePrefs();
+}
+
 async function flipCamera() {
   if (state.demo) { toast('示範模式無法切換鏡頭'); return; }
   state.facing = state.facing === 'user' ? 'environment' : 'user';
@@ -383,14 +516,19 @@ function init() {
   loadPrefs();
   buildModeBar();
   el.btnTimer.textContent = state.timer === 0 ? '⏱ 關' : `⏱ ${state.timer}s`;
+  el.btnSound.textContent = state.sound ? '🔊' : '🔇';
+  el.btnAuto.classList.toggle('on', state.auto);
+  el.btnShutter.classList.toggle('armed', state.auto);
 
-  $('#btn-start').addEventListener('click', enterCamera);
-  $('#btn-demo').addEventListener('click', () => enterDemo());
+  $('#btn-start').addEventListener('click', () => { feedback.unlock(); enterCamera(); });
+  $('#btn-demo').addEventListener('click', () => { feedback.unlock(); enterDemo(); });
   $('#btn-shutter').addEventListener('click', onShutter);
   $('#btn-grid').addEventListener('click', () => openSheet(el.gridMenu));
   $('#btn-tips').addEventListener('click', openTips);
   $('#btn-tips-close').addEventListener('click', closeSheets);
   $('#btn-timer').addEventListener('click', cycleTimer);
+  el.btnSound.addEventListener('click', toggleSound);
+  el.btnAuto.addEventListener('click', toggleAuto);
   $('#btn-flip').addEventListener('click', flipCamera);
   $('#btn-thumb').addEventListener('click', openPhoto);
   $('#btn-photo-close').addEventListener('click', () => el.photoView.classList.add('hidden'));

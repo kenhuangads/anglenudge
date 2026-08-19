@@ -56,6 +56,7 @@
 
       <div id="demo-badge" class="hidden">示範模式</div>
       <div id="checklist"></div>
+      <div id="score" class="hidden"></div>
       <div id="hint"><span id="hint-text">準備中…</span></div>
       <div id="countdown" class="hidden"></div>
       <div id="flash"></div>
@@ -64,9 +65,15 @@
     <footer id="controls">
       <nav id="modes" aria-label="拍攝模式"></nav>
       <div id="action-row">
-        <button id="btn-tips" class="round-btn" title="拍攝秘訣">💡</button>
+        <div class="action-side">
+          <button id="btn-tips" class="round-btn" title="拍攝秘訣">💡</button>
+          <button id="btn-sound" class="round-btn" title="對齊提示音">🔊</button>
+        </div>
         <button id="btn-shutter" aria-label="拍照"><span></span></button>
-        <button id="btn-thumb" class="round-btn empty" aria-label="預覽最近照片"></button>
+        <div class="action-side">
+          <button id="btn-auto" class="round-btn" title="自動快門">🤖</button>
+          <button id="btn-thumb" class="round-btn empty" aria-label="預覽最近照片"></button>
+        </div>
       </div>
     </footer>
   </main>
