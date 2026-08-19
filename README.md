@@ -28,17 +28,30 @@ AngleNudge 是一款「拍照教練」——依照拍攝情境（食物、人像
 
 ## 🚀 快速開始
 
+### 直接用（手機建議走這條）
+
+**<https://kenhuangads.github.io/anglenudge/>**
+
+GitHub Pages 部署，已強制 HTTPS，相機與動作感應器可正常授權。手機開啟後可「加入主畫面」當獨立 App 使用；想先看示範模式：<https://kenhuangads.github.io/anglenudge/?demo=1>
+
+> 📱 iOS 請用 Safari（動作感應器授權最穩定），Android 用 Chrome。
+> 首次進入會**依序**詢問動作感應器與相機權限，兩者都要允許。
+
+### 本機開發
+
 ```bash
 git clone https://github.com/kenhuangads/anglenudge.git
 cd anglenudge
 python3 -m http.server 8123
 ```
 
-打開 <http://localhost:8123> 即可使用；想先看示範模式：<http://localhost:8123/?demo=1>
+打開 <http://localhost:8123> 即可使用；示範模式：<http://localhost:8123/?demo=1>
 
-> 📱 **手機實測注意**：相機與動作感應器需要 HTTPS（或 localhost）。最快的做法：
-> 1. 把 repo 改為 public → GitHub Settings → Pages → 從 `main` 部署，就有 HTTPS 網址；或
-> 2. 用 `cloudflared tunnel --url http://localhost:8123` / `ngrok http 8123` 建立臨時 HTTPS 網址。
+> ⚠️ 相機與動作感應器需要 **secure context**（HTTPS 或 localhost）。
+> 手機連區網 IP（`http://192.168.x.x:8123`）畫面會出來，但相機黑屏、角度提示消失。
+> 要在手機測「尚未推送」的本機修改，用 `cloudflared tunnel --url http://localhost:8123` 或 `ngrok http 8123` 開臨時 HTTPS 網址。
+
+推送到 `main` 後 Pages 會自動重建（約 30 秒～1 分鐘）；Service Worker 採網路優先策略，手機重新整理即取得新版。
 
 ## 🧭 使用方式
 
@@ -95,4 +108,6 @@ python3 -m http.server 8123
 ## 版權
 
 © 2026 Ken Huang. All rights reserved.
-本專案為商業產品開發用途，暫不採用開源授權。
+
+本專案為商業產品開發用途，**不採用開源授權**。原始碼公開僅供展示、測試與評估；
+未經書面同意，不得重製、修改、散布，或用於任何產品或服務。完整條款見 [LICENSE](LICENSE)。

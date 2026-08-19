@@ -1,0 +1,71 @@
+AngleNudge — Proprietary Software License
+Copyright (c) 2026 Ken Huang. All rights reserved.
+
+------------------------------------------------------------------------
+ENGLISH
+------------------------------------------------------------------------
+
+This software and its source code (the "Software") are the proprietary
+property of Ken Huang. The source is made publicly viewable on GitHub
+solely for demonstration, testing, and evaluation purposes.
+
+NO LICENSE IS GRANTED. The public visibility of this repository does not
+constitute an open-source license, nor does it place the Software in the
+public domain.
+
+Without the prior written permission of the copyright holder, you may NOT:
+
+  1. Copy, reproduce, or redistribute the Software or any portion of it;
+  2. Modify, adapt, translate, or create derivative works from it;
+  3. Use the Software, in whole or in part, in any product or service,
+     whether commercial or non-commercial;
+  4. Publish, sublicense, sell, rent, lease, or otherwise transfer it;
+  5. Remove or alter any copyright or proprietary notice contained herein.
+
+Permitted without prior permission:
+
+  - Viewing the source code on GitHub;
+  - Using the hosted demonstration at
+    https://kenhuangads.github.io/anglenudge/ for personal evaluation;
+  - Cloning the repository locally for personal, non-distributed
+    evaluation only.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+------------------------------------------------------------------------
+繁體中文
+------------------------------------------------------------------------
+
+本軟體及其原始碼（以下稱「本軟體」）為 Ken Huang 之專有財產。原始碼於
+GitHub 公開，僅供展示、測試與評估之用。
+
+本專案「未授予任何授權」。本儲存庫之公開狀態，不構成開源授權，亦不代表
+本軟體進入公眾領域（public domain）。
+
+未經著作權人事前書面同意，不得為下列行為：
+
+  1. 重製、複製或散布本軟體之全部或任何部分；
+  2. 修改、改作、翻譯或據以製作衍生著作；
+  3. 將本軟體之全部或部分用於任何產品或服務，無論是否具營利性質；
+  4. 發行、再授權、販售、出租、出借或以其他方式移轉本軟體；
+  5. 移除或變更本檔案所載之著作權或專有權利聲明。
+
+無須事前同意即可為之：
+
+  - 於 GitHub 瀏覽原始碼；
+  - 使用 https://kenhuangads.github.io/anglenudge/ 之線上展示版本進行
+    個人評估；
+  - 為個人評估目的於本機複製本儲存庫，且不得再散布。
+
+本軟體係以「現狀」提供，不提供任何明示或默示之擔保，包括但不限於適售性、
+特定目的適用性及未侵害他人權利之擔保。著作權人對於因使用本軟體或與本軟體
+相關而生之任何請求、損害或其他責任，均不負責。
+
+------------------------------------------------------------------------
+
+授權洽詢 / Licensing inquiries: https://github.com/kenhuangads
